@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrendaVaro — Cotizador</title>
+
+<!-- ── PWA ── -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#8B1A1A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cotizador PV">
+<link rel="apple-touch-icon" href="./icon.svg">
+
+<style>
+/* ================================================================
+   RESET & BASE
+================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: #1a1a1a;
+  color: #f0f0f0;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ================================================================
+   BANNER DE ACTUALIZACIÓN
+================================================================ */
+#update-banner {
+  display: none;
+  background: #1a4d1a;
+  border-bottom: 2px solid #2d7a2d;
+  padding: 9px 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: 13px;
+  color: #a8e6a8;
+}
+#update-banner button.btn-update {
+  background: #2d7a2d; border: none; border-radius: 5px;
+  color: #fff; font-size: 12px; font-weight: 700;
+  padding: 5px 14px; cursor: pointer;
+}
+#update-banner button.btn-dismiss {
+  background: transparent; border: none;
+  color: #6a9a6a; font-size: 18px; cursor: pointer; line-height: 1;
+}
+
+/* ================================================================
+   BANNER DE INSTALACIÓN
+================================================================ */
+#install-banner {
+  display: none;
+  background: #1a1a4d;
+  border-bottom: 2px solid #2d2d7a;
+  padding: 9px 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: 13px;
+  color: #a8a8e6;
+}
+#install-banner button.btn-install {
+  background: #2d2d7a; border: none; border-radius: 5px;
+  color: #fff; font-size: 12px; font-weight: 700;
+  padding: 5px 14px; cursor: pointer;
+}
+#install-banner button.btn-dismiss {
+  background: transparent; border: none;
+  color: #6a6a9a; font-size: 18px; cursor: pointer; line-height: 1;
+}
+
+/* ================================================================
+   HEADER
+================================================================ */
+.header {
+  background: #242424;
+  border-bottom: 3px solid #8B1A1A;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon {
+  width: 42px; height: 42px;
+  background: #8B1A1A; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900; color: #fff;
+}
+.brand-name { font-size: 20px; font-weight: 800; color: #fff; }
+.brand-sub  { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 1px; }
+.header-right { text-align: right; }
+.app-version { font-size: 11px; color: #444; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.offline-badge {
+  display: none;
+  font-size: 11px; color: #e67e22; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* ================================================================
+   TABS
+================================================================ */
+.tabs {
+  background: #242424; display: flex;
+  border-bottom: 2px solid #2f2f2f; padding: 0 16px;
+}
+.tab-btn {
+  padding: 13px 28px; font-size: 13px; font-weight: 700;
+  border: none; border-bottom: 3px solid transparent; margin-bottom: -2px;
+  background: transparent; color: #666;
+  cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: #eee; background: #2c2c2c; }
+.tab-btn.active { color: #fff; border-bottom-color: #C0392B; background: #2c2c2c; }
+
+/* ================================================================
+   LAYOUT
+================================================================ */
+.content { padding: 16px 20px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-4 { display: grid; grid-template-columns: 210px 1fr 1fr 1fr; gap: 14px; align-items: start; }
+
+/* ================================================================
+   CARDS
+================================================================ */
+.card {
+  background: #2a2a2a; border: 1px solid #363636;
+  border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+}
+.card:last-child { margin-bottom: 0; }
+.card-header {
+  background: #8B1A1A; padding: 8px 14px;
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-body { padding: 14px; }
+.reset-btn {
+  background: rgba(255,255,255,0.18); border: none; border-radius: 4px;
+  color: #fff; font-size: 11px; font-weight: 600;
+  padding: 3px 10px; cursor: pointer; transition: background 0.15s;
+}
+.reset-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* ================================================================
+   TABLES
+================================================================ */
+table { width: 100%; border-collapse: collapse; }
+th {
+  background: #5c1212; color: #ddd; padding: 7px 10px;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px; text-align: center;
+}
+th.left { text-align: left; }
+td { padding: 6px 10px; border-bottom: 1px solid #2f2f2f; text-align: center; vertical-align: middle; }
+td.label { text-align: left; color: #999; font-weight: 600; font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a; border-bottom: none; }
+
+/* ================================================================
+   INPUTS
+================================================================ */
+.input-num {
+  width: 100%; min-width: 68px;
+  background: #181818; border: 2px solid #3a3a3a; border-radius: 5px;
+  color: #fff; font-size: 15px; font-weight: 600;
+  padding: 7px 6px; text-align: center; transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.input-num::-webkit-outer-spin-button,
+.input-num::-webkit-inner-spin-button { -webkit-appearance: none; }
+.input-num:focus { outline: none; border-color: #C0392B; background: #1e1e1e; }
+
+.input-ofrecido {
+  width: 100%; background: #111; border: 2px solid #8B1A1A; border-radius: 6px;
+  color: #4CAF50; font-size: 26px; font-weight: 800;
+  padding: 8px; text-align: center; transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.input-ofrecido::-webkit-outer-spin-button,
+.input-ofrecido::-webkit-inner-spin-button { -webkit-appearance: none; }
+.input-ofrecido:focus { outline: none; border-color: #e74c3c; }
+
+/* ================================================================
+   VALUE CLASSES
+================================================================ */
+.val-zero   { color: #383838; }
+.val-pos    { color: #ddd; font-weight: 600; }
+.val-green  { color: #4CAF50; font-weight: 800; }
+.val-orange { color: #e67e22; font-weight: 800; }
+.val-big    { font-size: 18px; }
+
+/* ================================================================
+   INTEREST TABLE (GOLD)
+================================================================ */
+.int-table th { background: #3d1010; font-size: 12px; padding: 9px 14px; }
+.int-table td { padding: 11px 14px; }
+.int-table td.row-label { text-align: left; font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; }
+.int-value { font-size: 22px; font-weight: 800; color: #e67e22; }
+
+/* ================================================================
+   BOXES
+================================================================ */
+.boxes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.box { background: #1f1f1f; border: 1px solid #333; border-radius: 6px; padding: 10px 12px; text-align: center; }
+.box-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.box-value { font-size: 18px; font-weight: 800; color: #fff; }
+
+/* ================================================================
+   OFRECIDO WRAP (GOLD)
+================================================================ */
+.ofrecido-wrap {
+  background: #1a1a1a; border: 2px solid #8B1A1A;
+  border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
+}
+.ofrecido-label { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+
+/* ================================================================
+   WARNING
+================================================================ */
+.warning {
+  background: #5a1f00; border: 1px solid #c0392b;
+  border-radius: 6px; padding: 7px 12px;
+  font-size: 13px; color: #ffb74d; display: none;
+}
+.warning.show { display: block; }
+
+/* ================================================================
+   PRORRATEO TABLE
+================================================================ */
+.prorr-table th { background: #2f2f2f; color: #888; font-size: 11px; }
+.prorr-table td { font-size: 13px; color: #3a3a3a; }
+.prorr-active   { color: #4CAF50 !important; font-weight: 700; }
+
+/* ================================================================
+   ELECTRONICS — COLUMN
+================================================================ */
+.elec-col-head {
+  background: #8B1A1A; color: #fff; text-align: center;
+  padding: 12px 10px; font-size: 14px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.elec-level { padding: 10px 12px; border-bottom: 1px solid #2f2f2f; }
+.estado-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.loan-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.loan-amount { font-size: 22px; font-weight: 800; color: #fff; }
+.loan-int { text-align: right; font-size: 12px; color: #e67e22; line-height: 1.7; }
+
+.elec-ofr-section { background: #1f1f1f; padding: 10px 12px; }
+.elec-ofr-label { font-size: 10px; color: #777; text-transform: uppercase; margin-bottom: 4px; }
+
+.elec-result {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 12px; border-top: 1px solid #282828;
+}
+.elec-result-label { font-size: 11px; color: #777; text-transform: uppercase; }
+.elec-result-value { font-size: 17px; font-weight: 800; color: #e67e22; }
+
+/* ================================================================
+   ELECTRONICS — COMPRA
+================================================================ */
+.compra-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid #2f2f2f;
+}
+.compra-row:last-child { border-bottom: none; }
+.compra-estado { font-size: 13px; color: #999; }
+.compra-val    { font-size: 17px; font-weight: 700; color: #fff; }
+
+/* ================================================================
+   RESPONSIVE
+================================================================ */
+@media (max-width: 1000px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .grid-4 { grid-template-columns: 1fr; }
+  .content { padding: 10px 12px; }
+  .tab-btn { padding: 12px 16px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     BANNERS (actualización e instalación)
+============================================================ -->
+<div id="update-banner">
+  🔄 Nueva versión disponible — precios o tasas actualizados.
+  <button class="btn-update" onclick="applyUpdate()">Actualizar ahora</button>
+  <button class="btn-dismiss" onclick="this.parentElement.style.display='none'" title="Cerrar">×</button>
+</div>
+
+<div id="install-banner">
+  📲 Instalar el cotizador como app (funciona sin internet)
+  <button class="btn-install" onclick="installApp()">Instalar</button>
+  <button class="btn-dismiss" onclick="this.parentElement.style.display='none'" title="Cerrar">×</button>
+</div>
+
+<!-- ============================================================
+     HEADER
+============================================================ -->
+<div class="header">
+  <div class="brand">
+    <div class="brand-icon">$</div>
+    <div>
+      <div class="brand-name">PrendaVaro</div>
+      <div class="brand-sub">Casa de empeño — Cotizador interno</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="offline-badge" id="offline-badge">⚠ Sin conexión</div>
+    <div class="app-version" id="app-version"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TABS
+============================================================ -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab(this,'oro')">🥇&nbsp; Cotizador de Oro</button>
+  <button class="tab-btn" onclick="switchTab(this,'elec')">📱&nbsp; Cotizador de Electrónicos</button>
+</div>
+
+<!-- ============================================================
+     CONTENT
+============================================================ -->
+<div class="content">
+
+  <!-- ==================== TAB ORO ==================== -->
+  <div id="tab-oro" class="tab-panel active">
+
+    <div class="grid-2">
+
+      <!-- LEFT: Gramos + Ofrecido -->
+      <div>
+        <div class="card">
+          <div class="card-header">
+            Ingreso de Gramos
+            <button class="reset-btn" onclick="resetGold()">↺ Nueva cotización</button>
+          </div>
+          <div class="card-body" style="padding:12px">
+            <table>
+              <thead>
+                <tr><th class="left">Kilataje</th><th>NOR</th><th>FUN</th><th>ESP</th></tr>
+              </thead>
+              <tbody id="gram-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Préstamo Ofrecido</div>
+          <div class="card-body">
+            <div class="ofrecido-wrap">
+              <div class="ofrecido-label">Monto a prestar (MXN)</div>
+              <input type="number" id="gold-ofrecido" class="input-ofrecido"
+                     min="0" placeholder="$0" oninput="recalcGold()">
+            </div>
+            <div id="gold-warning" class="warning">
+              ⚠ El monto ofrecido supera el Préstamo Permitido Máximo.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Valores + Intereses -->
+      <div>
+        <div class="card">
+          <div class="card-header">Valor Calculado ($)</div>
+          <div class="card-body" style="padding:12px">
+            <table>
+              <thead>
+                <tr><th class="left">Kilataje</th><th>NOR</th><th>FUN</th><th>ESP</th></tr>
+              </thead>
+              <tbody id="val-tbody"></tbody>
+              <tfoot>
+                <tr>
+                  <td class="label" colspan="3" style="text-align:right">TOTAL BASE</td>
+                  <td id="gold-total" class="val-green val-big">—</td>
+                </tr>
+              </tfoot>
+            </table>
+            <div class="boxes-row">
+              <div class="box">
+                <div class="box-label">Préstamo Permitido Base</div>
+                <div class="box-value" id="perm-base">—</div>
+              </div>
+              <div class="box">
+                <div class="box-label">Préstamo Permitido Máximo (+3%)</div>
+                <div class="box-value" id="perm-max">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Intereses sobre Préstamo Ofrecido</div>
+          <div class="card-body" style="padding:0">
+            <table class="int-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>4 Semanas</th>
+                  <th>4 Quincenas</th>
+                  <th>3 Meses</th>
+                  <th id="th-fija" style="display:none">Fija 3M</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="row-label">Int. p/periodo</td>
+                  <td><span id="g-4s-pp" class="int-value">—</span></td>
+                  <td><span id="g-4q-pp" class="int-value">—</span></td>
+                  <td><span id="g-3m-pp" class="int-value">—</span></td>
+                  <td id="td-fija-pp" style="display:none"><span id="g-fija-pp" class="int-value">—</span></td>
+                </tr>
+                <tr>
+                  <td class="row-label">Int. total</td>
+                  <td><span id="g-4s-tt" class="int-value">—</span></td>
+                  <td><span id="g-4q-tt" class="int-value">—</span></td>
+                  <td><span id="g-3m-tt" class="int-value">—</span></td>
+                  <td id="td-fija-tt" style="display:none"><span id="g-fija-tt" class="int-value">—</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRORRATEO -->
+    <div class="card">
+      <div class="card-header">Distribución del Préstamo por Pieza (para boleta de empeño)</div>
+      <div class="card-body" style="padding:12px">
+        <table class="prorr-table">
+          <thead>
+            <tr><th class="left">Kilataje</th><th>NOR</th><th>FUN</th><th>ESP</th></tr>
+          </thead>
+          <tbody id="prorr-tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td class="label" colspan="3"
+                  style="text-align:right;color:#555;font-size:11px;text-transform:uppercase">
+                Total asignado
+              </td>
+              <td id="prorr-total" style="font-weight:800;color:#fff">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- end tab-oro -->
+
+  <!-- ==================== TAB ELECTRÓNICOS ==================== -->
+  <div id="tab-elec" class="tab-panel">
+
+    <div class="card" style="max-width:280px;margin-bottom:16px">
+      <div class="card-header">
+        Base Referencia
+        <button class="reset-btn" onclick="resetElec()">↺ Nueva</button>
+      </div>
+      <div class="card-body">
+        <div style="font-size:11px;color:#777;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">
+          Precio de referencia del equipo
+        </div>
+        <input type="number" id="elec-base" class="input-ofrecido"
+               min="0" placeholder="$0" oninput="recalcElec()">
+      </div>
+    </div>
+
+    <div class="grid-4">
+
+      <!-- COMPRA -->
+      <div class="card">
+        <div class="elec-col-head">Compra</div>
+        <div class="card-body">
+          <div class="compra-row">
+            <span class="compra-estado">Excelente</span>
+            <span class="compra-val" id="compra-exc">—</span>
+          </div>
+          <div class="compra-row">
+            <span class="compra-estado">Bueno</span>
+            <span class="compra-val" id="compra-bno">—</span>
+          </div>
+          <div class="compra-row">
+            <span class="compra-estado">Regular</span>
+            <span class="compra-val" id="compra-reg">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGA MENOS -->
+      <div class="card">
+        <div class="elec-col-head">Paga Menos</div>
+        <div id="levels-paga-menos"></div>
+        <div class="elec-ofr-section">
+          <div class="elec-ofr-label">Préstamo Ofrecido</div>
+          <input type="number" id="ofr-paga-menos" class="input-ofrecido"
+                 min="0" placeholder="$0" oninput="recalcElecOfr('paga-menos')"
+                 style="font-size:20px;padding:7px">
+        </div>
+        <div class="elec-result">
+          <span class="elec-result-label">Int x semana</span>
+          <span class="elec-result-value" id="res-sem-paga-menos">—</span>
+        </div>
+        <div class="elec-result">
+          <span class="elec-result-label">Interés 4S</span>
+          <span class="elec-result-value" id="res-4s-paga-menos">—</span>
+        </div>
+      </div>
+
+      <!-- MÁS PRÉSTAMO -->
+      <div class="card">
+        <div class="elec-col-head">Más Préstamo</div>
+        <div id="levels-mas-prestamo"></div>
+        <div class="elec-ofr-section">
+          <div class="elec-ofr-label">Préstamo Ofrecido</div>
+          <input type="number" id="ofr-mas-prestamo" class="input-ofrecido"
+                 min="0" placeholder="$0" oninput="recalcElecOfr('mas-prestamo')"
+                 style="font-size:20px;padding:7px">
+        </div>
+        <div class="elec-result">
+          <span class="elec-result-label">Int x semana</span>
+          <span class="elec-result-value" id="res-sem-mas-prestamo">—</span>
+        </div>
+        <div class="elec-result">
+          <span class="elec-result-label">Interés 4S</span>
+          <span class="elec-result-value" id="res-4s-mas-prestamo">—</span>
+        </div>
+      </div>
+
+      <!-- EXTRA -->
+      <div class="card">
+        <div class="elec-col-head">Extra</div>
+        <div id="levels-extra"></div>
+        <div class="elec-ofr-section">
+          <div class="elec-ofr-label">Préstamo Ofrecido</div>
+          <input type="number" id="ofr-extra" class="input-ofrecido"
+                 min="0" placeholder="$0" oninput="recalcElecOfr('extra')"
+                 style="font-size:20px;padding:7px">
+        </div>
+        <div class="elec-result">
+          <span class="elec-result-label">Int x semana</span>
+          <span class="elec-result-value" id="res-sem-extra">—</span>
+        </div>
+        <div class="elec-result">
+          <span class="elec-result-label">Interés 4S</span>
+          <span class="elec-result-value" id="res-4s-extra">—</span>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end tab-elec -->
+
+</div><!-- end content -->
+
+<script>
+// ================================================================
+// CONFIG — Modificar aquí las reglas del negocio
+//
+// ⚠ Al cambiar precios/tasas, también actualizar VERSION
+//   con la misma fecha que CACHE_VERSION en sw.js
+// ================================================================
+const CONFIG = {
+
+  // Versión visible en el header (debe coincidir con sw.js CACHE_VERSION)
+  VERSION: '2026-03-03',
+
+  // ---- PRECIOS ORO: pesos por gramo ----
+  GOLD_BASE: {
+    '8k':  { NOR: 742,  FUN: 704,  ESP: 773  },
+    '10k': { NOR: 928,  FUN: 879,  ESP: 966  },
+    '12k': { NOR: 1113, FUN: 1055, ESP: 1160 },
+    '14k': { NOR: 1299, FUN: 1231, ESP: 1353 },
+    '18k': { NOR: 1670, FUN: 1583, ESP: 1740 }
+  },
+
+  // Porcentaje adicional para Préstamo Máximo
+  GOLD_MAX_PCT: 0.03,
+
+  // ---- TASAS ORO: % por periodo ----
+  GOLD_RATES: {
+    '4S':   { rate: 0.0281, periods: 4, minLoan: 0    },
+    '4Q':   { rate: 0.0544, periods: 4, minLoan: 0    },
+    '3M':   { rate: 0.1066, periods: 3, minLoan: 0    },
+    'FIJA': { rate: 0.1860, periods: 1, minLoan: 7000 }
+  },
+
+  // ---- TASAS ELECTRÓNICOS: % por semana (siempre 4S) ----
+  ELEC_RATES: {
+    'paga-menos':   0.0281,
+    'mas-prestamo': 0.0370,
+    'extra':        0.0450
+  },
+
+  // ---- MULTIPLICADORES ELECTRÓNICOS: sobre Base Referencia ----
+  ELEC_MULT: {
+    'paga-menos':   { Regular: -0.35, Bueno: -0.25, Excelente: -0.15 },
+    'mas-prestamo': { Regular: -0.20, Bueno: -0.05, Excelente:  0.00 },
+    'extra':        { Regular:  0.00, Bueno:  0.05, Excelente:  0.10 },
+    'compra':       { Regular:  0.00, Bueno:  0.05, Excelente:  0.10 }
+  },
+
+  // ---- COBRO MÍNIMO ----
+  MIN_CHARGE: 24,
+
+  // ---- CONSTANTES (no cambiar) ----
+  KILATAJES: ['8k', '10k', '12k', '14k', '18k'],
+  CATEGORIAS: ['NOR', 'FUN', 'ESP'],
+  ELEC_COLS: ['paga-menos', 'mas-prestamo', 'extra'],
+  ESTADOS: ['Excelente', 'Bueno', 'Regular']
+};
+
+// ================================================================
+// UTILIDADES
+// ================================================================
+function fmt(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function intPP(loan, rate, mc)          { return Math.max(loan * rate, mc); }
+function intTT(loan, rate, periods, mc) { return Math.max(loan * rate * periods, mc); }
+function numVal(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  return (!isNaN(v) && v > 0) ? v : 0;
+}
+function setText(id, t) { const e = document.getElementById(id); if (e) e.textContent = t; }
+function showEl(id)     { const e = document.getElementById(id); if (e) e.style.display = ''; }
+function hideEl(id)     { const e = document.getElementById(id); if (e) e.style.display = 'none'; }
+
+// ================================================================
+// BUILD DOM — ORO
+// ================================================================
+function buildGoldGrids() {
+  document.getElementById('gram-tbody').innerHTML = CONFIG.KILATAJES.map(k =>
+    `<tr><td class="label">${k}</td>` +
+    CONFIG.CATEGORIAS.map(c =>
+      `<td><input type="number" id="g-${k}-${c}" class="input-num"
+           min="0" step="0.01" placeholder="—" oninput="recalcGold()"></td>`
+    ).join('') + `</tr>`
+  ).join('');
+
+  document.getElementById('val-tbody').innerHTML = CONFIG.KILATAJES.map(k =>
+    `<tr><td class="label">${k}</td>` +
+    CONFIG.CATEGORIAS.map(c =>
+      `<td id="v-${k}-${c}" class="val-zero">—</td>`
+    ).join('') + `</tr>`
+  ).join('');
+
+  document.getElementById('prorr-tbody').innerHTML = CONFIG.KILATAJES.map(k =>
+    `<tr><td class="label" style="color:#555">${k}</td>` +
+    CONFIG.CATEGORIAS.map(c =>
+      `<td id="p-${k}-${c}" class="val-zero">—</td>`
+    ).join('') + `</tr>`
+  ).join('');
+}
+
+// ================================================================
+// LÓGICA DE CÁLCULO — ORO
+// ================================================================
+function recalcGold() {
+  const mc = CONFIG.MIN_CHARGE;
+  let totalVal = 0;
+  const cellVals = {};
+
+  CONFIG.KILATAJES.forEach(k => {
+    cellVals[k] = {};
+    CONFIG.CATEGORIAS.forEach(c => {
+      const val = numVal(`g-${k}-${c}`) * CONFIG.GOLD_BASE[k][c];
+      cellVals[k][c] = val;
+      totalVal += val;
+    });
+  });
+
+  const permBase = totalVal;
+  const permMax  = totalVal * (1 + CONFIG.GOLD_MAX_PCT);
+  const ofrecido = numVal('gold-ofrecido');
+
+  CONFIG.KILATAJES.forEach(k => {
+    CONFIG.CATEGORIAS.forEach(c => {
+      const el = document.getElementById(`v-${k}-${c}`);
+      if (!el) return;
+      const v = cellVals[k][c];
+      el.textContent = v > 0 ? fmt(v) : '—';
+      el.className   = v > 0 ? 'val-pos' : 'val-zero';
+    });
+  });
+
+  setText('gold-total', totalVal > 0 ? fmt(totalVal) : '—');
+  setText('perm-base',  totalVal > 0 ? fmt(permBase) : '—');
+  setText('perm-max',   totalVal > 0 ? fmt(permMax)  : '—');
+
+  const warn = document.getElementById('gold-warning');
+  (ofrecido > 0 && permMax > 0 && ofrecido > permMax)
+    ? warn.classList.add('show') : warn.classList.remove('show');
+
+  if (ofrecido > 0) {
+    const R = CONFIG.GOLD_RATES;
+    setText('g-4s-pp', fmt(intPP(ofrecido, R['4S'].rate, mc)));
+    setText('g-4s-tt', fmt(intTT(ofrecido, R['4S'].rate, R['4S'].periods, mc)));
+    setText('g-4q-pp', fmt(intPP(ofrecido, R['4Q'].rate, mc)));
+    setText('g-4q-tt', fmt(intTT(ofrecido, R['4Q'].rate, R['4Q'].periods, mc)));
+    setText('g-3m-pp', fmt(intPP(ofrecido, R['3M'].rate, mc)));
+    setText('g-3m-tt', fmt(intTT(ofrecido, R['3M'].rate, R['3M'].periods, mc)));
+
+    if (ofrecido >= R['FIJA'].minLoan) {
+      const fi = ofrecido * R['FIJA'].rate;
+      setText('g-fija-pp', fmt(fi)); setText('g-fija-tt', fmt(fi));
+      showEl('th-fija'); showEl('td-fija-pp'); showEl('td-fija-tt');
+    } else {
+      hideEl('th-fija'); hideEl('td-fija-pp'); hideEl('td-fija-tt');
+    }
+  } else {
+    ['g-4s-pp','g-4s-tt','g-4q-pp','g-4q-tt','g-3m-pp','g-3m-tt'].forEach(id => setText(id, '—'));
+    hideEl('th-fija'); hideEl('td-fija-pp'); hideEl('td-fija-tt');
+  }
+
+  CONFIG.KILATAJES.forEach(k => {
+    CONFIG.CATEGORIAS.forEach(c => {
+      const el = document.getElementById(`p-${k}-${c}`);
+      if (!el) return;
+      let v = 0;
+      if (totalVal > 0 && ofrecido > 0 && cellVals[k][c] > 0)
+        v = Math.round(ofrecido * (cellVals[k][c] / totalVal));
+      el.textContent = v > 0 ? fmt(v) : '—';
+      el.className   = v > 0 ? 'prorr-active' : 'val-zero';
+    });
+  });
+  setText('prorr-total', ofrecido > 0 ? fmt(ofrecido) : '—');
+}
+
+// ================================================================
+// LÓGICA DE CÁLCULO — ELECTRÓNICOS
+// ================================================================
+function recalcElec() {
+  const base = numVal('elec-base');
+  const mc   = CONFIG.MIN_CHARGE;
+  const cm   = CONFIG.ELEC_MULT['compra'];
+
+  setText('compra-exc', base > 0 ? fmt(Math.round(base * (1 + cm.Excelente))) : '—');
+  setText('compra-bno', base > 0 ? fmt(Math.round(base * (1 + cm.Bueno)))     : '—');
+  setText('compra-reg', base > 0 ? fmt(Math.round(base * (1 + cm.Regular)))   : '—');
+
+  CONFIG.ELEC_COLS.forEach(col => {
+    const mult = CONFIG.ELEC_MULT[col];
+    const rate = CONFIG.ELEC_RATES[col];
+    const div  = document.getElementById(`levels-${col}`);
+    if (!div) return;
+
+    div.innerHTML = CONFIG.ESTADOS.map(estado => {
+      const loan  = base > 0 ? Math.round(base * (1 + mult[estado])) : 0;
+      const iSem  = base > 0 ? Math.max(loan * rate, mc) : 0;
+      const i4s   = base > 0 ? Math.max(loan * rate * 4, mc) : 0;
+      return `
+        <div class="elec-level">
+          <div class="estado-label">${estado}</div>
+          <div class="loan-row">
+            <span class="loan-amount">${base > 0 ? fmt(loan) : '—'}</span>
+            <div class="loan-int">
+              ${base > 0 ? fmt(iSem) + ' x sem' : '—'}<br>
+              ${base > 0 ? fmt(i4s)  + ' x 4 sem' : '—'}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    recalcElecOfr(col);
+  });
+}
+
+function recalcElecOfr(col) {
+  const ofr  = numVal(`ofr-${col}`);
+  const rate = CONFIG.ELEC_RATES[col];
+  const mc   = CONFIG.MIN_CHARGE;
+  if (ofr > 0) {
+    setText(`res-sem-${col}`, fmt(Math.max(ofr * rate, mc)));
+    setText(`res-4s-${col}`,  fmt(Math.max(ofr * rate * 4, mc)));
+  } else {
+    setText(`res-sem-${col}`, '—');
+    setText(`res-4s-${col}`,  '—');
+  }
+}
+
+// ================================================================
+// RESET
+// ================================================================
+function resetGold() {
+  CONFIG.KILATAJES.forEach(k =>
+    CONFIG.CATEGORIAS.forEach(c => {
+      const el = document.getElementById(`g-${k}-${c}`);
+      if (el) el.value = '';
+    })
+  );
+  document.getElementById('gold-ofrecido').value = '';
+  recalcGold();
+}
+
+function resetElec() {
+  document.getElementById('elec-base').value = '';
+  CONFIG.ELEC_COLS.forEach(col => {
+    const el = document.getElementById(`ofr-${col}`);
+    if (el) el.value = '';
+  });
+  recalcElec();
+}
+
+// ================================================================
+// TABS
+// ================================================================
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ================================================================
+// PWA — SERVICE WORKER
+// ================================================================
+let deferredInstallPrompt = null;
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // Detectar nueva versión disponible
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+          // Hay una versión nueva esperando → mostrar banner
+          document.getElementById('update-banner').style.display = 'flex';
+        }
+      });
+    });
+  }).catch(err => console.warn('SW registration failed:', err));
+}
+
+// Aplicar actualización pendiente
+function applyUpdate() {
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if (reg && reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+    window.location.reload();
+  });
+}
+
+// PWA — Capturar prompt de instalación del navegador
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+
+function installApp() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(() => {
+    deferredInstallPrompt = null;
+    document.getElementById('install-banner').style.display = 'none';
+  });
+}
+
+// PWA — Detectar modo offline/online
+function updateOnlineStatus() {
+  const badge = document.getElementById('offline-badge');
+  if (!navigator.onLine) {
+    badge.style.display = 'block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  buildGoldGrids();
+  recalcGold();
+  recalcElec();
+  setText('app-version', 'v' + CONFIG.VERSION);
+  updateOnlineStatus();
+});
+</script>
+</body>
+</html>

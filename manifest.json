@@ -1,0 +1,21 @@
+{
+  "name": "PrendaVaro — Cotizador",
+  "short_name": "Cotizador PV",
+  "description": "Cotizador interno de oro y electrónicos para cajeros PrendaVaro",
+  "start_url": "https://cotizador.prendavaro.com/",
+  "scope": "https://cotizador.prendavaro.com/",
+  "id": "https://cotizador.prendavaro.com/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "theme_color": "#8B1A1A",
+  "background_color": "#1a1a1a",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

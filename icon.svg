@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#8B1A1A"/>
+  <!-- Línea vertical del signo $ -->
+  <line x1="256" y1="72" x2="256" y2="440" stroke="white" stroke-width="28" stroke-linecap="round"/>
+  <!-- Signo $ -->
+  <path d="M320 150 Q320 108 256 108 Q192 108 192 168 Q192 216 256 240 Q324 264 324 324 Q324 392 256 400 Q188 400 188 352"
+        stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Letras PV pequeñas en la parte inferior -->
+  <text x="256" y="478" font-family="Arial, sans-serif" font-size="52" font-weight="700"
+        text-anchor="middle" fill="rgba(255,255,255,0.5)">PrendaVaro</text>
+</svg>
