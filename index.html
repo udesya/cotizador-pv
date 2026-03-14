@@ -365,8 +365,8 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
           <div class="card-body">
             <div class="ofrecido-wrap">
               <div class="ofrecido-label">Monto a prestar (MXN)</div>
-              <input type="number" id="gold-ofrecido" class="input-ofrecido"
-                     min="0" placeholder="$0" oninput="recalcGold()">
+              <input type="text" id="gold-ofrecido" class="input-ofrecido"
+                     inputmode="numeric" placeholder="$0" oninput="fmtInput(this);recalcGold()">
             </div>
             <div id="gold-warning" class="warning">
               ⚠ El monto ofrecido supera el Préstamo Permitido Máximo.
@@ -476,8 +476,8 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
         <div style="font-size:11px;color:#777;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">
           Precio de referencia del equipo
         </div>
-        <input type="number" id="elec-base" class="input-ofrecido"
-               min="0" placeholder="$0" oninput="recalcElec()">
+        <input type="text" id="elec-base" class="input-ofrecido"
+               inputmode="numeric" placeholder="$0" oninput="fmtInput(this);recalcElec()">
       </div>
     </div>
 
@@ -508,8 +508,8 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
         <div id="levels-paga-menos"></div>
         <div class="elec-ofr-section">
           <div class="elec-ofr-label">Préstamo Ofrecido</div>
-          <input type="number" id="ofr-paga-menos" class="input-ofrecido"
-                 min="0" placeholder="$0" oninput="recalcElecOfr('paga-menos')"
+          <input type="text" id="ofr-paga-menos" class="input-ofrecido"
+                 inputmode="numeric" placeholder="$0" oninput="fmtInput(this);recalcElecOfr('paga-menos')"
                  style="font-size:20px;padding:7px">
         </div>
         <div class="elec-result">
@@ -528,8 +528,8 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
         <div id="levels-mas-prestamo"></div>
         <div class="elec-ofr-section">
           <div class="elec-ofr-label">Préstamo Ofrecido</div>
-          <input type="number" id="ofr-mas-prestamo" class="input-ofrecido"
-                 min="0" placeholder="$0" oninput="recalcElecOfr('mas-prestamo')"
+          <input type="text" id="ofr-mas-prestamo" class="input-ofrecido"
+                 inputmode="numeric" placeholder="$0" oninput="fmtInput(this);recalcElecOfr('mas-prestamo')"
                  style="font-size:20px;padding:7px">
         </div>
         <div class="elec-result">
@@ -548,8 +548,8 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
         <div id="levels-extra"></div>
         <div class="elec-ofr-section">
           <div class="elec-ofr-label">Préstamo Ofrecido</div>
-          <input type="number" id="ofr-extra" class="input-ofrecido"
-                 min="0" placeholder="$0" oninput="recalcElecOfr('extra')"
+          <input type="text" id="ofr-extra" class="input-ofrecido"
+                 inputmode="numeric" placeholder="$0" oninput="fmtInput(this);recalcElecOfr('extra')"
                  style="font-size:20px;padding:7px">
         </div>
         <div class="elec-result">
@@ -634,8 +634,14 @@ function fmt(n) {
 function intPP(loan, rate, mc)          { return Math.max(loan * rate, mc); }
 function intTT(loan, rate, periods, mc) { return Math.max(loan * rate * periods, mc); }
 function numVal(id) {
-  const v = parseFloat(document.getElementById(id).value);
+  const raw = document.getElementById(id).value.replace(/,/g, '');
+  const v = parseFloat(raw);
   return (!isNaN(v) && v > 0) ? v : 0;
+}
+function fmtInput(el) {
+  const raw = el.value.replace(/\D/g, '');
+  if (!raw) { el.value = ''; return; }
+  el.value = parseInt(raw, 10).toLocaleString('en-US');
 }
 function setText(id, t) { const e = document.getElementById(id); if (e) e.textContent = t; }
 function showEl(id)     { const e = document.getElementById(id); if (e) e.style.display = ''; }
