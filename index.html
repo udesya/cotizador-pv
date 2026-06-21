@@ -252,6 +252,7 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
 }
 .elec-level { padding: 10px 12px; border-bottom: 1px solid #2f2f2f; }
 .estado-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.estado-label.estado-malo { color: #e74c3c; }
 .loan-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .loan-amount { font-size: 22px; font-weight: 800; color: #fff; }
 .loan-int { text-align: right; font-size: 12px; color: #e67e22; line-height: 1.7; }
@@ -275,6 +276,7 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
 }
 .compra-row:last-child { border-bottom: none; }
 .compra-estado { font-size: 13px; color: #999; }
+.compra-estado.estado-malo { color: #e74c3c; }
 .compra-val    { font-size: 17px; font-weight: 700; color: #fff; }
 
 /* ================================================================
@@ -499,6 +501,10 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
             <span class="compra-estado">Regular</span>
             <span class="compra-val" id="compra-reg">—</span>
           </div>
+          <div class="compra-row">
+            <span class="compra-estado estado-malo">Maltratado</span>
+            <span class="compra-val" id="compra-mal">—</span>
+          </div>
         </div>
       </div>
 
@@ -608,10 +614,10 @@ const CONFIG = {
 
   // ---- MULTIPLICADORES ELECTRÓNICOS: sobre Base Referencia ----
   ELEC_MULT: {
-    'paga-menos':   { Regular: -0.35, Bueno: -0.25, Excelente: -0.15 },
-    'mas-prestamo': { Regular: -0.20, Bueno: -0.05, Excelente:  0.00 },
-    'extra':        { Regular:  0.00, Bueno:  0.05, Excelente:  0.10 },
-    'compra':       { Regular:  0.00, Bueno:  0.05, Excelente:  0.10 }
+    'paga-menos':   { Regular: -0.35, Bueno: -0.25, Excelente: -0.15, Maltratado: -0.50 },
+    'mas-prestamo': { Regular: -0.20, Bueno: -0.05, Excelente:  0.00, Maltratado: -0.40 },
+    'extra':        { Regular:  0.00, Bueno:  0.05, Excelente:  0.10, Maltratado: -0.30 },
+    'compra':       { Regular:  0.00, Bueno:  0.05, Excelente:  0.10, Maltratado: -0.20 }
   },
 
   // ---- COBRO MÍNIMO ----
@@ -621,7 +627,7 @@ const CONFIG = {
   KILATAJES: ['8k', '10k', '12k', '14k', '18k'],
   CATEGORIAS: ['NOR', 'FUN', 'ESP'],
   ELEC_COLS: ['paga-menos', 'mas-prestamo', 'extra'],
-  ESTADOS: ['Excelente', 'Bueno', 'Regular']
+  ESTADOS: ['Excelente', 'Bueno', 'Regular', 'Maltratado']
 };
 
 // ================================================================
@@ -756,9 +762,10 @@ function recalcElec() {
   const mc   = CONFIG.MIN_CHARGE;
   const cm   = CONFIG.ELEC_MULT['compra'];
 
-  setText('compra-exc', base > 0 ? fmt(Math.round(base * (1 + cm.Excelente))) : '—');
-  setText('compra-bno', base > 0 ? fmt(Math.round(base * (1 + cm.Bueno)))     : '—');
-  setText('compra-reg', base > 0 ? fmt(Math.round(base * (1 + cm.Regular)))   : '—');
+  setText('compra-exc', base > 0 ? fmt(Math.round(base * (1 + cm.Excelente)))  : '—');
+  setText('compra-bno', base > 0 ? fmt(Math.round(base * (1 + cm.Bueno)))      : '—');
+  setText('compra-reg', base > 0 ? fmt(Math.round(base * (1 + cm.Regular)))    : '—');
+  setText('compra-mal', base > 0 ? fmt(Math.round(base * (1 + cm.Maltratado))) : '—');
 
   CONFIG.ELEC_COLS.forEach(col => {
     const mult = CONFIG.ELEC_MULT[col];
@@ -772,7 +779,7 @@ function recalcElec() {
       const i4s   = base > 0 ? Math.max(loan * rate * 4, mc) : 0;
       return `
         <div class="elec-level">
-          <div class="estado-label">${estado}</div>
+          <div class="estado-label${estado === 'Maltratado' ? ' estado-malo' : ''}">${estado}</div>
           <div class="loan-row">
             <span class="loan-amount">${base > 0 ? fmt(loan) : '—'}</span>
             <div class="loan-int">
