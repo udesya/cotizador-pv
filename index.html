@@ -253,6 +253,7 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
 .elec-level { padding: 10px 12px; border-bottom: 1px solid #2f2f2f; }
 .estado-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
 .estado-label.estado-malo { color: #e74c3c; }
+.estado-label.estado-excelente { color: #3498db; }
 .loan-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .loan-amount { font-size: 22px; font-weight: 800; color: #fff; }
 .loan-int { text-align: right; font-size: 12px; color: #e67e22; line-height: 1.7; }
@@ -277,6 +278,7 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
 .compra-row:last-child { border-bottom: none; }
 .compra-estado { font-size: 13px; color: #999; }
 .compra-estado.estado-malo { color: #e74c3c; }
+.compra-estado.estado-excelente { color: #3498db; }
 .compra-val    { font-size: 17px; font-weight: 700; color: #fff; }
 
 /* ================================================================
@@ -490,7 +492,7 @@ tfoot td { background: #1f1f1f; font-weight: 700; border-top: 2px solid #3a3a3a;
         <div class="elec-col-head">Compra</div>
         <div class="card-body">
           <div class="compra-row">
-            <span class="compra-estado">Excelente</span>
+            <span class="compra-estado estado-excelente">Excelente</span>
             <span class="compra-val" id="compra-exc">—</span>
           </div>
           <div class="compra-row">
@@ -779,7 +781,7 @@ function recalcElec() {
       const i4s   = base > 0 ? Math.max(loan * rate * 4, mc) : 0;
       return `
         <div class="elec-level">
-          <div class="estado-label${estado === 'Maltratado' ? ' estado-malo' : ''}">${estado}</div>
+          <div class="estado-label${estado === 'Maltratado' ? ' estado-malo' : estado === 'Excelente' ? ' estado-excelente' : ''}">${estado}</div>
           <div class="loan-row">
             <span class="loan-amount">${base > 0 ? fmt(loan) : '—'}</span>
             <div class="loan-int">
