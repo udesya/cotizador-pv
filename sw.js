@@ -8,7 +8,7 @@
 //   Ejemplo: '2026-03-03' → '2026-05-15'
 // ================================================================
 
-const CACHE_VERSION = '2026-03-03';
+const CACHE_VERSION = '2026-07-15';
 const CACHE_NAME    = `prendavaro-${CACHE_VERSION}`;
 
 const FILES_TO_CACHE = [
